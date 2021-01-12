@@ -31,10 +31,13 @@ This script follows regex logic as python DICT's in upgrade_path_regex or downgr
 # Examples:
 
 cg-ion-upgrade.py --ion-serial '11114d56-0000-b727-d7e8-f46f53aaaaaa'
+
     Upgrades this serial to the latest version using interactive auth
 
 cg-ion-upgrade.py --ion-serial '11114d56-0000-b727-d7e8-f46f53aaaaaa' -v "5.2.7" -s 2
+
     Upgrades this serial to the latest 5.2.7 version, but perform no more than 2 firmware update steps for safety
 
 cg-ion-upgrade.py --ion-serial '11114d56-0000-b727-d7e8-f46f53aaaaaa' -w 360 -a downgrade -v "4.5.3"
+
     Downgrade an ion to version 4.5.3 and wait 360 seconds (6 minutes) between each firmware downgrade step
