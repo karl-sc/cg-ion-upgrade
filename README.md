@@ -2,7 +2,7 @@
 CloudGenix script to intelligently upgrade/downgrade ION firmware.
 
 
-
+```
 # usage: cg-ion-upgrade.py 
   -h, --help            show this help message and exit
   --ion-serial ion-serial, -i ion-serial
@@ -24,7 +24,7 @@ CloudGenix script to intelligently upgrade/downgrade ION firmware.
   --max-wait max-wait, -w max-wait
                         The maximum time to wait for each firmware change step
                         in seconds (default:240)
-
+```
 Upgrades or Downgrades an ION in stages based on the TAC recommended path. I.E. 4.5 -> 4.7 -> 5.0 -> 5.2
 This script follows regex logic as python DICT's in upgrade_path_regex or downgrade_path_regex respectively
 
