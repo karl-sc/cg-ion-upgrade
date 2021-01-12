@@ -17,8 +17,8 @@ usage: cg-ion-upgrade.py
   --authtokenfile "MYTOKENFILE.TXT", -f "MYTOKENFILE.TXT"
                         a file containing the authtoken
   --action action, -a action
-                        (upgrade | downgrade) choose whether to upgrade or
-                        downgrade firmware
+                        (upgrade | downgrade | auto) choose whether to upgrade or
+                        downgrade firmware (Default:auto)
   --max-steps max-steps, -s max-steps
                         The maximum firmware steps to upgrade or downgrade
                         (default:5)
@@ -65,8 +65,6 @@ import sys
 import argparse
 
 
-
-
 def parse_arguments():
     CLIARGS = {}
     parser = argparse.ArgumentParser(
@@ -83,7 +81,7 @@ def parse_arguments():
     parser.add_argument('--authtokenfile', '-f', metavar='"MYTOKENFILE.TXT"', type=str, 
                     help='a file containing the authtoken')
     parser.add_argument('--action', '-a', metavar='action', type=str, 
-                    help='(upgrade | downgrade) choose whether to upgrade or downgrade firmware', default="upgrade", required=False)
+                    help='(upgrade | downgrade | auto) choose whether to upgrade or downgrade firmware. Default: auto', default="auto", required=False)
     parser.add_argument('--max-steps', '-s', metavar='max-steps', type=str, 
                     help='The maximum firmware steps to upgrade or downgrade (default:5)', default="5", required=False)    
     parser.add_argument('--max-wait', '-w', metavar='max-wait', type=str, 
@@ -289,13 +287,51 @@ def find_ion_by_sn(sdk, ion_serial):
     print("Could not find ION serial",str(ion_serial),"in tenant")
     return False
 
+def is_upgrade_or_downgrade(sdk, element_id, target_version):
+    image_dict = get_images_list(sdk)
+    current_version = get_element_sw_version(sdk,element_id)
+    if not target_version:
+        target_version = max(image_dict.keys(), key=major_minor_micro)
+    exact_target_version = get_exact_major_minor_micro(target_version, image_dict)
+    (target_major, target_minor, target_micro) = major_minor_micro(exact_target_version)
+    (current_major, current_minor, current_micro) = major_minor_micro(current_version)
+    # First compare major versions to check for upgrade or downgrade
+    if current_major < target_major:
+        return "upgrade"
+    if current_major > target_major:
+        return "downgrade"
+    # Since major versions are equal, check minor version
+    if current_minor < target_minor:
+        return "upgrade"
+    if current_minor > target_minor:
+        return "downgrade"
+    # Since minor versions are equal, check micro version, but remove all except from digits for our comparison
+    current_minor = re.sub('\D', '', str(current_minor))
+    target_minor = re.sub('\D', '', str(target_minor))
+    if current_minor < target_minor:
+        return "upgrade"
+    if current_minor > target_minor:
+        return "downgrade"
+    print("Aborting. Version numbers are the same")
+    return None
+    
+
 def go(sdk, CLIARGS):
     ion_serial = str(CLIARGS['ion_serial'])
-    action = str(CLIARGS['action'])
+    cli_action = str(CLIARGS['action'])
     max_steps = int(CLIARGS['max_steps'])
     max_wait = int(CLIARGS['max_wait'])
     version_target = CLIARGS['version_target']
     element_id = find_ion_by_sn(sdk,ion_serial)
+    action = is_upgrade_or_downgrade(sdk, element_id,version_target )
+    if not action:
+        print("Could not determine if this is an upgrade or downgrade")
+        return False  
+    if (cli_action != "auto") and (cli_action != action):
+        print("Error. Action was specified to be",cli_action,"but we detected that the firmware change to be " + str(action) + ". Either double check the intended action/target version, or set to Auto")
+        return False
+    if (cli_action == "auto"):
+        print("current version number compared to target indicates",action)
     if not element_id:
         return False
     if action == "upgrade":
