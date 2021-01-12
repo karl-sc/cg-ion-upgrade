@@ -16,8 +16,8 @@ CloudGenix script to intelligently upgrade/downgrade ION firmware.
   --authtokenfile "MYTOKENFILE.TXT", -f "MYTOKENFILE.TXT"
                         a file containing the authtoken
   --action action, -a action
-                        (upgrade | downgrade) choose whether to upgrade or
-                        downgrade firmware
+                        (upgrade | downgrade | auto) choose whether to upgrade or
+                        downgrade firmware (Default:auto)
   --max-steps max-steps, -s max-steps
                         The maximum firmware steps to upgrade or downgrade
                         (default:5)
